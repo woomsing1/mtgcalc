@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#eeece8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#161614" media="(prefers-color-scheme: dark)">
   <title>Mortgage Calculator</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -17,17 +21,18 @@
       --border: rgba(0,0,0,0.12);
       --border-md: rgba(0,0,0,0.22);
       --radius-sm: 8px;
-      --radius-md: 12px;
+      --radius-md: 14px;
       --green: #1D9E75;
       --red: #E24B4A;
       --font: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+      --input-h: 44px;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #1c1c1a;
         --bg-secondary: #252523;
-        --bg-tertiary: #2e2e2b;
+        --bg-tertiary: #161614;
         --text-primary: #f0ede8;
         --text-secondary: #9f9e99;
         --text-tertiary: #6b6b67;
@@ -36,38 +41,37 @@
       }
     }
 
+    html { -webkit-text-size-adjust: 100%; }
+
     body {
       font-family: var(--font);
       background: var(--bg-tertiary);
       color: var(--text-primary);
       min-height: 100vh;
-      padding: 40px 16px;
+      min-height: 100dvh;
+      padding: 24px 16px 48px;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .container {
-      max-width: 700px;
-      margin: 0 auto;
+    @media (min-width: 600px) {
+      body { padding: 40px 24px 60px; }
     }
 
-    h1 {
-      font-size: 22px;
-      font-weight: 500;
-      margin-bottom: 6px;
-    }
+    .container { max-width: 700px; margin: 0 auto; }
 
-    .subtitle {
-      font-size: 13px;
-      color: var(--text-tertiary);
-      margin-bottom: 32px;
-    }
+    .header { margin-bottom: 22px; }
+    h1 { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+    @media (min-width: 600px) { h1 { font-size: 22px; } }
+    .subtitle { font-size: 13px; color: var(--text-tertiary); }
 
     .card {
       background: var(--bg);
       border-radius: var(--radius-md);
       border: 0.5px solid var(--border);
-      padding: 24px;
-      margin-bottom: 16px;
+      padding: 18px 16px;
+      margin-bottom: 12px;
     }
+    @media (min-width: 600px) { .card { padding: 24px; margin-bottom: 16px; } }
 
     .section-title {
       font-size: 11px;
@@ -75,20 +79,19 @@
       letter-spacing: .08em;
       text-transform: uppercase;
       color: var(--text-tertiary);
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
     .input-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 14px;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 600px) {
+      .input-grid { grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
     }
 
-    @media (max-width: 540px) {
-      .input-grid { grid-template-columns: 1fr 1fr; }
-    }
-
-    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
     .field label { font-size: 12px; color: var(--text-secondary); }
 
     .field-row {
@@ -98,9 +101,8 @@
       border-radius: var(--radius-sm);
       overflow: hidden;
       background: var(--bg);
-      transition: box-shadow .15s;
     }
-    .field-row:focus-within { box-shadow: 0 0 0 2px rgba(0,0,0,0.15); }
+    .field-row:focus-within { box-shadow: 0 0 0 2px rgba(55,138,221,0.25); }
 
     .prefix, .suffix {
       padding: 0 10px;
@@ -110,8 +112,8 @@
       flex-shrink: 0;
       display: flex;
       align-items: center;
-      height: 38px;
-      border: none;
+      height: var(--input-h);
+      user-select: none;
     }
 
     .field-row input,
@@ -119,139 +121,134 @@
       border: none;
       outline: none;
       background: transparent;
-      height: 38px;
+      height: var(--input-h);
       padding: 0 10px;
-      font-size: 14px;
+      font-size: 15px;
       font-family: var(--font);
       color: var(--text-primary);
       width: 100%;
       min-width: 0;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .field-row select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239f9e99' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 26px;
     }
 
-    .field-row select { cursor: pointer; }
+    .field-hint { font-size: 11px; color: var(--text-tertiary); min-height: 15px; }
 
-    .field-hint {
-      font-size: 11px;
-      color: var(--text-tertiary);
-      min-height: 16px;
-    }
-
-    .toggle-suffix { display: flex; height: 38px; flex-shrink: 0; }
+    .toggle-suffix { display: flex; height: var(--input-h); flex-shrink: 0; }
     .toggle-btn {
       border: none;
       background: transparent;
       height: 100%;
-      padding: 0 10px;
-      font-size: 12px;
+      padding: 0 11px;
+      font-size: 13px;
       cursor: pointer;
       color: var(--text-tertiary);
       font-family: var(--font);
       border-left: 0.5px solid var(--border-md);
-      transition: background .1s;
+      -webkit-tap-highlight-color: transparent;
     }
-    .toggle-btn.active {
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-      font-weight: 500;
-    }
+    .toggle-btn.active { background: var(--bg-secondary); color: var(--text-primary); font-weight: 500; }
 
     .result-cards {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 24px;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 16px;
     }
-
-    @media (max-width: 540px) {
-      .result-cards { grid-template-columns: 1fr 1fr; }
+    @media (min-width: 600px) {
+      .result-cards { grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-top: 22px; }
     }
+    .rcard { background: var(--bg-secondary); border-radius: var(--radius-sm); padding: 12px 13px; }
+    .rcard .label { font-size: 11px; color: var(--text-tertiary); margin-bottom: 5px; line-height: 1.4; }
+    .rcard .val { font-size: 16px; font-weight: 500; }
+    @media (min-width: 600px) { .rcard .val { font-size: 18px; } }
+    .rcard .sub { font-size: 10px; color: var(--text-tertiary); margin-top: 3px; }
 
-    .rcard {
-      background: var(--bg-secondary);
-      border-radius: var(--radius-sm);
-      padding: 14px 16px;
-    }
-    .rcard .label { font-size: 11px; color: var(--text-tertiary); margin-bottom: 6px; line-height: 1.4; }
-    .rcard .val { font-size: 18px; font-weight: 500; }
-    .rcard .sub { font-size: 11px; color: var(--text-tertiary); margin-top: 3px; }
-
-    .divider { border: none; border-top: 0.5px solid var(--border); margin: 0; }
-
+    /* Tabs */
+    .tab-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 16px; }
+    .tab-scroll::-webkit-scrollbar { display: none; }
     .tab-row {
       display: flex;
-      gap: 0;
       border: 0.5px solid var(--border);
       border-radius: var(--radius-sm);
       overflow: hidden;
-      width: fit-content;
-      margin-bottom: 20px;
+      width: 100%;
     }
     .tab {
-      padding: 7px 14px;
+      padding: 9px 0;
       font-size: 12px;
       cursor: pointer;
       border: none;
       background: transparent;
       color: var(--text-secondary);
       font-family: var(--font);
-      transition: background .1s;
+      white-space: nowrap;
+      flex: 1;
+      text-align: center;
+      -webkit-tap-highlight-color: transparent;
     }
     .tab + .tab { border-left: 0.5px solid var(--border); }
-    .tab.active {
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-      font-weight: 500;
-    }
+    .tab.active { background: var(--bg-secondary); color: var(--text-primary); font-weight: 500; }
 
-    .scenario-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .scard {
-      border: 0.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 16px;
-    }
-    .scard h4 { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; font-weight: 500; }
-    .scard .big { font-size: 22px; font-weight: 500; margin-bottom: 8px; }
+    /* Scenario */
+    .scenario-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .scard { border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 13px; }
+    .scard h4 { font-size: 11px; color: var(--text-secondary); margin-bottom: 9px; font-weight: 500; }
+    .scard .big { font-size: 18px; font-weight: 500; margin-bottom: 8px; line-height: 1.2; }
     .scard .row {
       display: flex;
       justify-content: space-between;
-      font-size: 12px;
+      font-size: 11px;
       padding: 5px 0;
       border-top: 0.5px solid var(--border);
       color: var(--text-secondary);
+      gap: 6px;
     }
-    .scard .row span:last-child { color: var(--text-primary); font-weight: 500; }
+    .scard .row span:last-child { color: var(--text-primary); font-weight: 500; white-space: nowrap; }
 
-    .dti-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 16px; }
-    .dti-results { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .dti-rcard { background: var(--bg-secondary); border-radius: var(--radius-sm); padding: 14px 16px; }
-    .dti-rcard .label { font-size: 11px; color: var(--text-tertiary); margin-bottom: 6px; line-height: 1.4; }
-    .dti-rcard .val { font-size: 18px; font-weight: 500; }
+    /* DTI */
+    .dti-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    @media (min-width: 600px) { .dti-inputs { grid-template-columns: 1fr 1fr 1fr; } }
+    .dti-results { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .dti-rcard { background: var(--bg-secondary); border-radius: var(--radius-sm); padding: 12px 13px; }
+    .dti-rcard .label { font-size: 11px; color: var(--text-tertiary); margin-bottom: 5px; line-height: 1.4; }
+    .dti-rcard .val { font-size: 16px; font-weight: 500; }
+    @media (min-width: 600px) { .dti-rcard .val { font-size: 18px; } }
 
-    .table-wrap {
-      border: 0.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      overflow: hidden;
-    }
-    .amort-wrap { max-height: 320px; overflow-y: auto; }
+    /* Tables */
+    .table-outer { border: 0.5px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-scroll::-webkit-scrollbar { height: 3px; }
+    .table-scroll::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 2px; }
+    .amort-scroll { max-height: 280px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 
-    table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    table { min-width: 340px; }
     thead th {
       position: sticky;
       top: 0;
       background: var(--bg-secondary);
-      padding: 9px 12px;
+      padding: 9px 10px;
       text-align: right;
       font-weight: 500;
       color: var(--text-secondary);
       border-bottom: 0.5px solid var(--border);
+      white-space: nowrap;
     }
     thead th:first-child { text-align: left; }
-    tbody tr:hover { background: var(--bg-secondary); }
     tbody td {
-      padding: 8px 12px;
+      padding: 8px 10px;
       text-align: right;
       color: var(--text-primary);
       border-bottom: 0.5px solid var(--border);
+      white-space: nowrap;
     }
     tbody td:first-child { text-align: left; color: var(--text-secondary); }
     tbody tr:last-child td { border-bottom: none; }
@@ -264,28 +261,31 @@
       text-align: center;
       font-size: 11px;
       color: var(--text-tertiary);
-      margin-top: 24px;
+      margin-top: 20px;
+      line-height: 1.6;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Mortgage calculator</h1>
-    <p class="subtitle">Estimate your monthly payment and total cost</p>
+    <div class="header">
+      <h1>Mortgage calculator</h1>
+      <p class="subtitle">Estimate your monthly payment and total cost</p>
+    </div>
 
     <div class="card">
       <div class="section-title">Loan details</div>
       <div class="input-grid">
         <div class="field">
           <label>Purchase price</label>
-          <div class="field-row"><span class="prefix">$</span><input type="text" id="price" value="500,000" inputmode="numeric"></div>
+          <div class="field-row"><span class="prefix">$</span><input type="text" id="price" value="500,000" inputmode="numeric" autocomplete="off"></div>
           <div class="field-hint"></div>
         </div>
         <div class="field">
           <label>Down payment</label>
           <div class="field-row">
             <span class="prefix" id="down-prefix">$</span>
-            <input type="text" id="down" value="100,000" inputmode="numeric">
+            <input type="text" id="down" value="100,000" inputmode="numeric" autocomplete="off">
             <div class="toggle-suffix">
               <button class="toggle-btn active" id="btn-dollar" onclick="setDownMode('dollar')">$</button>
               <button class="toggle-btn" id="btn-pct" onclick="setDownMode('pct')">%</button>
@@ -305,35 +305,37 @@
         </div>
         <div class="field">
           <label>Interest rate</label>
-          <div class="field-row"><input type="number" id="rate" value="6.75" min="0" max="30" step="0.01"><span class="suffix">%</span></div>
+          <div class="field-row"><input type="number" id="rate" value="6.75" min="0" max="30" step="0.01" inputmode="decimal"><span class="suffix">%</span></div>
           <div class="field-hint"></div>
         </div>
         <div class="field">
           <label>Property tax / yr</label>
-          <div class="field-row"><span class="prefix">$</span><input type="number" id="tax" value="6000" min="0" step="100"></div>
+          <div class="field-row"><span class="prefix">$</span><input type="number" id="tax" value="6000" min="0" step="100" inputmode="numeric"></div>
           <div class="field-hint"></div>
         </div>
         <div class="field">
           <label>Home insurance / yr</label>
-          <div class="field-row"><span class="prefix">$</span><input type="number" id="ins" value="1500" min="0" step="100"></div>
+          <div class="field-row"><span class="prefix">$</span><input type="number" id="ins" value="1500" min="0" step="100" inputmode="numeric"></div>
           <div class="field-hint"></div>
         </div>
       </div>
 
       <div class="result-cards">
         <div class="rcard"><div class="label">Monthly P&amp;I</div><div class="val" id="monthly-pi">—</div><div class="sub">Principal &amp; interest</div></div>
-        <div class="rcard"><div class="label">Monthly PITI</div><div class="val" id="monthly-piti">—</div><div class="sub">Incl. tax &amp; insurance</div></div>
+        <div class="rcard"><div class="label">Monthly PITI</div><div class="val" id="monthly-piti">—</div><div class="sub">Incl. tax &amp; ins.</div></div>
         <div class="rcard"><div class="label">Total interest</div><div class="val" id="total-int">—</div></div>
         <div class="rcard"><div class="label">Total cost</div><div class="val" id="total-cost">—</div></div>
       </div>
     </div>
 
     <div class="card">
-      <div class="tab-row">
-        <button class="tab active" onclick="showTab('scenario')">15 vs 30 yr</button>
-        <button class="tab" onclick="showTab('dti')">Max mortgage (DTI)</button>
-        <button class="tab" onclick="showTab('rates')">Rate comparison</button>
-        <button class="tab" onclick="showTab('amort')">Amortization</button>
+      <div class="tab-scroll">
+        <div class="tab-row">
+          <button class="tab active" onclick="showTab('scenario')">15 vs 30 yr</button>
+          <button class="tab" onclick="showTab('dti')">Max mortgage</button>
+          <button class="tab" onclick="showTab('rates')">Rate compare</button>
+          <button class="tab" onclick="showTab('amort')">Amortization</button>
+        </div>
       </div>
 
       <div id="tab-scenario" class="tab-content active">
@@ -342,9 +344,9 @@
 
       <div id="tab-dti" class="tab-content">
         <div class="dti-inputs">
-          <div class="field"><label>Annual income</label><div class="field-row"><span class="prefix">$</span><input type="number" id="income" value="120000" step="1000"></div></div>
-          <div class="field"><label>Monthly debts</label><div class="field-row"><span class="prefix">$</span><input type="number" id="debts" value="500" step="50"></div></div>
-          <div class="field"><label>Max DTI</label><div class="field-row"><input type="number" id="maxdti" value="43" min="1" max="60" step="1"><span class="suffix">%</span></div></div>
+          <div class="field"><label>Annual income</label><div class="field-row"><span class="prefix">$</span><input type="number" id="income" value="120000" step="1000" inputmode="numeric"></div></div>
+          <div class="field"><label>Monthly debts</label><div class="field-row"><span class="prefix">$</span><input type="number" id="debts" value="500" step="50" inputmode="numeric"></div></div>
+          <div class="field"><label>Max DTI</label><div class="field-row"><input type="number" id="maxdti" value="43" min="1" max="60" step="1" inputmode="numeric"><span class="suffix">%</span></div></div>
         </div>
         <div class="dti-results">
           <div class="dti-rcard"><div class="label">Max monthly housing payment (PITI)</div><div class="val" id="dti-max-monthly">—</div></div>
@@ -353,25 +355,25 @@
       </div>
 
       <div id="tab-rates" class="tab-content">
-        <div class="table-wrap">
+        <div class="table-outer"><div class="table-scroll">
           <table>
-            <thead><tr><th style="text-align:left">Rate</th><th>Monthly P&amp;I</th><th>Monthly PITI</th><th>Total interest</th><th>vs current</th></tr></thead>
+            <thead><tr><th style="text-align:left">Rate</th><th>P&amp;I</th><th>PITI</th><th>Total int.</th><th>vs now</th></tr></thead>
             <tbody id="rate-tbody"></tbody>
           </table>
-        </div>
+        </div></div>
       </div>
 
       <div id="tab-amort" class="tab-content">
-        <div class="table-wrap amort-wrap">
+        <div class="table-outer"><div class="table-scroll amort-scroll">
           <table>
-            <thead><tr><th>Month</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Balance</th></tr></thead>
+            <thead><tr><th>Mo.</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Balance</th></tr></thead>
             <tbody id="amort-body"></tbody>
           </table>
-        </div>
+        </div></div>
       </div>
     </div>
 
-    <footer>For estimation purposes only. Consult a licensed mortgage professional for official figures.</footer>
+    <footer>For estimation purposes only.<br>Consult a licensed mortgage professional for official figures.</footer>
   </div>
 
   <script>
@@ -455,18 +457,16 @@
     }
 
     function updateScenario(principal, rate, tax, ins) {
-      const terms = [15, 30];
-      const labels = { 15: '15 years fixed', 30: '30 years fixed' };
-      document.getElementById('scenario-grid').innerHTML = terms.map(t => {
+      document.getElementById('scenario-grid').innerHTML = [15, 30].map(t => {
         const m = calcPI(principal, rate, t);
         const piti = m + tax / 12 + ins / 12;
         const ti = m * t * 12 - principal;
         return `<div class="scard">
-          <h4>${labels[t]}</h4>
-          <div class="big">${fmt(piti)}<span style="font-size:13px;font-weight:400;color:var(--text-tertiary)">/mo PITI</span></div>
+          <h4>${t} years fixed</h4>
+          <div class="big">${fmt(piti)}<span style="font-size:11px;font-weight:400;color:var(--text-tertiary)"> /mo</span></div>
           <div class="row"><span>P&I only</span><span>${fmt(m)}</span></div>
           <div class="row"><span>Total interest</span><span>${fmt(Math.max(0, ti))}</span></div>
-          <div class="row"><span>Total cost (P&I)</span><span>${fmt(m * t * 12)}</span></div>
+          <div class="row"><span>Total cost</span><span>${fmt(m * t * 12)}</span></div>
         </div>`;
       }).join('');
     }
@@ -495,7 +495,7 @@
         const ti = m * n - principal;
         const diff = m - baseM;
         const isBase = Math.abs(r - currentRate) < 0.001;
-        const diffStr = isBase ? '—' : (diff > 0 ? '+' : '') + fmt(diff) + '/mo';
+        const diffStr = isBase ? '—' : (diff > 0 ? '+' : '') + fmt(diff);
         const diffColor = diff > 0 ? '#E24B4A' : diff < 0 ? '#1D9E75' : 'var(--text-secondary)';
         return `<tr${isBase ? ' class="highlight-row"' : ''}>
           <td style="text-align:left">${r.toFixed(2)}%${isBase ? ' ★' : ''}</td>
