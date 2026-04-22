@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mortgage Calculator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --bg-secondary: #f5f5f4;
+      --bg-tertiary: #eeece8;
+      --text-primary: #1a1a18;
+      --text-secondary: #6b6b67;
+      --text-tertiary: #9f9e99;
+      --border: rgba(0,0,0,0.12);
+      --border-md: rgba(0,0,0,0.22);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --green: #1D9E75;
+      --red: #E24B4A;
+      --font: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1c1a;
+        --bg-secondary: #252523;
+        --bg-tertiary: #2e2e2b;
+        --text-primary: #f0ede8;
+        --text-secondary: #9f9e99;
+        --text-tertiary: #6b6b67;
+        --border: rgba(255,255,255,0.1);
+        --border-md: rgba(255,255,255,0.18);
+      }
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 40px 16px;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      margin-bottom: 32px;
+    }
+
+    .card {
+      background: var(--bg);
+      border-radius: var(--radius-md);
+      border: 0.5px solid var(--border);
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-bottom: 16px;
+    }
+
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+    }
+
+    @media (max-width: 540px) {
+      .input-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 12px; color: var(--text-secondary); }
+
+    .field-row {
+      display: flex;
+      align-items: center;
+      border: 0.5px solid var(--border-md);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: var(--bg);
+      transition: box-shadow .15s;
+    }
+    .field-row:focus-within { box-shadow: 0 0 0 2px rgba(0,0,0,0.15); }
+
+    .prefix, .suffix {
+      padding: 0 10px;
+      font-size: 13px;
+      color: var(--text-tertiary);
+      background: var(--bg-secondary);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      height: 38px;
+      border: none;
+    }
+
+    .field-row input,
+    .field-row select {
+      border: none;
+      outline: none;
+      background: transparent;
+      height: 38px;
+      padding: 0 10px;
+      font-size: 14px;
+      font-family: var(--font);
+      color: var(--text-primary);
+      width: 100%;
+      min-width: 0;
+    }
+
+    .field-row select { cursor: pointer; }
+
+    .field-hint {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      min-height: 16px;
+    }
+
+    .toggle-suffix { display: flex; height: 38px; flex-shrink: 0; }
+    .toggle-btn {
+      border: none;
+      background: transparent;
+      height: 100%;
+      padding: 0 10px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--text-tertiary);
+      font-family: var(--font);
+      border-left: 0.5px solid var(--border-md);
+      transition: background .1s;
+    }
+    .toggle-btn.active {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .result-cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    @media (max-width: 540px) {
+      .result-cards { grid-template-columns: 1fr 1fr; }
+    }
+
+    .rcard {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+    }
+    .rcard .label { font-size: 11px; color: var(--text-tertiary); margin-bottom: 6px; line-height: 1.4; }
+    .rcard .val { font-size: 18px; font-weight: 500; }
+    .rcard .sub { font-size: 11px; color: var(--text-tertiary); margin-top: 3px; }
+
+    .divider { border: none; border-top: 0.5px solid var(--border); margin: 0; }
+
+    .tab-row {
+      display: flex;
+      gap: 0;
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      width: fit-content;
+      margin-bottom: 20px;
+    }
+    .tab {
+      padding: 7px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: var(--font);
+      transition: background .1s;
+    }
+    .tab + .tab { border-left: 0.5px solid var(--border); }
+    .tab.active {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .scenario-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .scard {
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+    }
+    .scard h4 { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; font-weight: 500; }
+    .scard .big { font-size: 22px; font-weight: 500; margin-bottom: 8px; }
+    .scard .row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 5px 0;
+      border-top: 0.5px solid var(--border);
+      color: var(--text-secondary);
+    }
+    .scard .row span:last-child { color: var(--text-primary); font-weight: 500; }
+
+    .dti-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+    .dti-results { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .dti-rcard { background: var(--bg-secondary); border-radius: var(--radius-sm); padding: 14px 16px; }
+    .dti-rcard .label { font-size: 11px; color: var(--text-tertiary); margin-bottom: 6px; line-height: 1.4; }
+    .dti-rcard .val { font-size: 18px; font-weight: 500; }
+
+    .table-wrap {
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .amort-wrap { max-height: 320px; overflow-y: auto; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+    thead th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-secondary);
+      padding: 9px 12px;
+      text-align: right;
+      font-weight: 500;
+      color: var(--text-secondary);
+      border-bottom: 0.5px solid var(--border);
+    }
+    thead th:first-child { text-align: left; }
+    tbody tr:hover { background: var(--bg-secondary); }
+    tbody td {
+      padding: 8px 12px;
+      text-align: right;
+      color: var(--text-primary);
+      border-bottom: 0.5px solid var(--border);
+    }
+    tbody td:first-child { text-align: left; color: var(--text-secondary); }
+    tbody tr:last-child td { border-bottom: none; }
+    .highlight-row td { font-weight: 500; background: var(--bg-secondary); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Mortgage calculator</h1>
+    <p class="subtitle">Estimate your monthly payment and total cost</p>
+
+    <div class="card">
+      <div class="section-title">Loan details</div>
+      <div class="input-grid">
+        <div class="field">
+          <label>Purchase price</label>
+          <div class="field-row"><span class="prefix">$</span><input type="text" id="price" value="500,000" inputmode="numeric"></div>
+          <div class="field-hint"></div>
+        </div>
+        <div class="field">
+          <label>Down payment</label>
+          <div class="field-row">
+            <span class="prefix" id="down-prefix">$</span>
+            <input type="text" id="down" value="100,000" inputmode="numeric">
+            <div class="toggle-suffix">
+              <button class="toggle-btn active" id="btn-dollar" onclick="setDownMode('dollar')">$</button>
+              <button class="toggle-btn" id="btn-pct" onclick="setDownMode('pct')">%</button>
+            </div>
+          </div>
+          <div class="field-hint" id="down-hint">20.0% of purchase price</div>
+        </div>
+        <div class="field">
+          <label>Loan term</label>
+          <div class="field-row"><select id="term">
+            <option value="30">30 years fixed</option>
+            <option value="20">20 years fixed</option>
+            <option value="15">15 years fixed</option>
+            <option value="10">10 years fixed</option>
+          </select></div>
+          <div class="field-hint"></div>
+        </div>
+        <div class="field">
+          <label>Interest rate</label>
+          <div class="field-row"><input type="number" id="rate" value="6.75" min="0" max="30" step="0.01"><span class="suffix">%</span></div>
+          <div class="field-hint"></div>
+        </div>
+        <div class="field">
+          <label>Property tax / yr</label>
+          <div class="field-row"><span class="prefix">$</span><input type="number" id="tax" value="6000" min="0" step="100"></div>
+          <div class="field-hint"></div>
+        </div>
+        <div class="field">
+          <label>Home insurance / yr</label>
+          <div class="field-row"><span class="prefix">$</span><input type="number" id="ins" value="1500" min="0" step="100"></div>
+          <div class="field-hint"></div>
+        </div>
+      </div>
+
+      <div class="result-cards">
+        <div class="rcard"><div class="label">Monthly P&amp;I</div><div class="val" id="monthly-pi">—</div><div class="sub">Principal &amp; interest</div></div>
+        <div class="rcard"><div class="label">Monthly PITI</div><div class="val" id="monthly-piti">—</div><div class="sub">Incl. tax &amp; insurance</div></div>
+        <div class="rcard"><div class="label">Total interest</div><div class="val" id="total-int">—</div></div>
+        <div class="rcard"><div class="label">Total cost</div><div class="val" id="total-cost">—</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tab-row">
+        <button class="tab active" onclick="showTab('scenario')">15 vs 30 yr</button>
+        <button class="tab" onclick="showTab('dti')">Max mortgage (DTI)</button>
+        <button class="tab" onclick="showTab('rates')">Rate comparison</button>
+        <button class="tab" onclick="showTab('amort')">Amortization</button>
+      </div>
+
+      <div id="tab-scenario" class="tab-content active">
+        <div class="scenario-grid" id="scenario-grid"></div>
+      </div>
+
+      <div id="tab-dti" class="tab-content">
+        <div class="dti-inputs">
+          <div class="field"><label>Annual income</label><div class="field-row"><span class="prefix">$</span><input type="number" id="income" value="120000" step="1000"></div></div>
+          <div class="field"><label>Monthly debts</label><div class="field-row"><span class="prefix">$</span><input type="number" id="debts" value="500" step="50"></div></div>
+          <div class="field"><label>Max DTI</label><div class="field-row"><input type="number" id="maxdti" value="43" min="1" max="60" step="1"><span class="suffix">%</span></div></div>
+        </div>
+        <div class="dti-results">
+          <div class="dti-rcard"><div class="label">Max monthly housing payment (PITI)</div><div class="val" id="dti-max-monthly">—</div></div>
+          <div class="dti-rcard"><div class="label">Maximum loan amount</div><div class="val" id="dti-max-loan">—</div></div>
+        </div>
+      </div>
+
+      <div id="tab-rates" class="tab-content">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="text-align:left">Rate</th><th>Monthly P&amp;I</th><th>Monthly PITI</th><th>Total interest</th><th>vs current</th></tr></thead>
+            <tbody id="rate-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="tab-amort" class="tab-content">
+        <div class="table-wrap amort-wrap">
+          <table>
+            <thead><tr><th>Month</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Balance</th></tr></thead>
+            <tbody id="amort-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <footer>For estimation purposes only. Consult a licensed mortgage professional for official figures.</footer>
+  </div>
+
+  <script>
+    const fmt = v => '$' + Math.round(v).toLocaleString();
+    const fmtComma = v => Math.round(v).toLocaleString();
+    let downMode = 'dollar';
+
+    function parseRaw(str) {
+      return parseFloat(String(str).replace(/,/g, '')) || 0;
+    }
+
+    function setDownMode(mode) {
+      const price = parseRaw(document.getElementById('price').value);
+      const downInput = document.getElementById('down');
+      const currentDown = getDownDollar();
+      downMode = mode;
+      document.getElementById('btn-dollar').classList.toggle('active', mode === 'dollar');
+      document.getElementById('btn-pct').classList.toggle('active', mode === 'pct');
+      document.getElementById('down-prefix').textContent = mode === 'dollar' ? '$' : '';
+      if (mode === 'pct') {
+        const pct = price > 0 ? (currentDown / price * 100) : 20;
+        downInput.value = parseFloat(pct.toFixed(2));
+      } else {
+        downInput.value = fmtComma(currentDown);
+      }
+      updateDownHint();
+      update();
+    }
+
+    function getDownDollar() {
+      const price = parseRaw(document.getElementById('price').value);
+      const raw = parseRaw(document.getElementById('down').value);
+      return downMode === 'pct' ? price * raw / 100 : raw;
+    }
+
+    function updateDownHint() {
+      const price = parseRaw(document.getElementById('price').value);
+      const downD = getDownDollar();
+      const hint = document.getElementById('down-hint');
+      if (price <= 0) { hint.textContent = ''; return; }
+      hint.textContent = downMode === 'dollar'
+        ? (downD / price * 100).toFixed(1) + '% of purchase price'
+        : fmt(downD) + ' of purchase price';
+    }
+
+    function calcPI(principal, annualRate, years) {
+      if (annualRate === 0) return principal / (years * 12);
+      const r = annualRate / 100 / 12, n = years * 12;
+      return principal * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+    }
+
+    function getInputs() {
+      return {
+        price: parseRaw(document.getElementById('price').value),
+        down: getDownDollar(),
+        term: +document.getElementById('term').value || 30,
+        rate: +document.getElementById('rate').value || 0,
+        tax: +document.getElementById('tax').value || 0,
+        ins: +document.getElementById('ins').value || 0,
+      };
+    }
+
+    function update() {
+      const { price, down, term, rate, tax, ins } = getInputs();
+      const principal = Math.max(0, price - down);
+      const monthly = calcPI(principal, rate, term);
+      const monthlyPITI = monthly + tax / 12 + ins / 12;
+      const totalPay = monthly * term * 12;
+      const totalInt = totalPay - principal;
+
+      document.getElementById('monthly-pi').textContent = fmt(monthly);
+      document.getElementById('monthly-piti').textContent = fmt(monthlyPITI);
+      document.getElementById('total-int').textContent = fmt(Math.max(0, totalInt));
+      document.getElementById('total-cost').textContent = fmt(totalPay);
+
+      updateDownHint();
+      updateScenario(principal, rate, tax, ins);
+      updateDTI();
+      updateRates(principal, rate, term, tax, ins);
+      updateAmort(principal, rate, term, monthly);
+    }
+
+    function updateScenario(principal, rate, tax, ins) {
+      const terms = [15, 30];
+      const labels = { 15: '15 years fixed', 30: '30 years fixed' };
+      document.getElementById('scenario-grid').innerHTML = terms.map(t => {
+        const m = calcPI(principal, rate, t);
+        const piti = m + tax / 12 + ins / 12;
+        const ti = m * t * 12 - principal;
+        return `<div class="scard">
+          <h4>${labels[t]}</h4>
+          <div class="big">${fmt(piti)}<span style="font-size:13px;font-weight:400;color:var(--text-tertiary)">/mo PITI</span></div>
+          <div class="row"><span>P&I only</span><span>${fmt(m)}</span></div>
+          <div class="row"><span>Total interest</span><span>${fmt(Math.max(0, ti))}</span></div>
+          <div class="row"><span>Total cost (P&I)</span><span>${fmt(m * t * 12)}</span></div>
+        </div>`;
+      }).join('');
+    }
+
+    function updateDTI() {
+      const income = +document.getElementById('income').value || 0;
+      const debts = +document.getElementById('debts').value || 0;
+      const maxdti = +document.getElementById('maxdti').value || 43;
+      const { rate, term, tax, ins } = getInputs();
+      const maxMonthlyHousing = (income / 12) * (maxdti / 100) - debts;
+      const maxPI = maxMonthlyHousing - tax / 12 - ins / 12;
+      document.getElementById('dti-max-monthly').textContent = maxMonthlyHousing > 0 ? fmt(maxMonthlyHousing) : '$0';
+      if (maxPI <= 0) { document.getElementById('dti-max-loan').textContent = '$0'; return; }
+      const r = rate / 100 / 12, n = term * 12;
+      const maxLoan = r === 0 ? maxPI * n : maxPI * (Math.pow(1 + r, n) - 1) / (r * Math.pow(1 + r, n));
+      document.getElementById('dti-max-loan').textContent = fmt(Math.max(0, maxLoan));
+    }
+
+    function updateRates(principal, currentRate, term, tax, ins) {
+      const n = term * 12;
+      const rates = [-1.5, -1, -0.5, 0, 0.5, 1, 1.5].map(d => +(currentRate + d).toFixed(2)).filter(r => r > 0);
+      const baseM = calcPI(principal, currentRate, term);
+      document.getElementById('rate-tbody').innerHTML = rates.map(r => {
+        const m = calcPI(principal, r, term);
+        const piti = m + tax / 12 + ins / 12;
+        const ti = m * n - principal;
+        const diff = m - baseM;
+        const isBase = Math.abs(r - currentRate) < 0.001;
+        const diffStr = isBase ? '—' : (diff > 0 ? '+' : '') + fmt(diff) + '/mo';
+        const diffColor = diff > 0 ? '#E24B4A' : diff < 0 ? '#1D9E75' : 'var(--text-secondary)';
+        return `<tr${isBase ? ' class="highlight-row"' : ''}>
+          <td style="text-align:left">${r.toFixed(2)}%${isBase ? ' ★' : ''}</td>
+          <td>${fmt(m)}</td><td>${fmt(piti)}</td>
+          <td>${fmt(Math.max(0, ti))}</td>
+          <td style="color:${diffColor}">${diffStr}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function updateAmort(principal, rate, term, monthly) {
+      const r = rate / 100 / 12, n = term * 12;
+      let bal = principal, html = '';
+      for (let i = 1; i <= n; i++) {
+        const intPay = bal * r;
+        const princPay = monthly - intPay;
+        bal = Math.max(0, bal - princPay);
+        if (i <= 60 || i % 12 === 0 || i === n) {
+          html += `<tr><td>${i}</td><td>${fmt(monthly)}</td><td>${fmt(princPay)}</td><td>${fmt(intPay)}</td><td>${fmt(bal)}</td></tr>`;
+        }
+      }
+      document.getElementById('amort-body').innerHTML = html;
+    }
+
+    function showTab(name) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach((btn, i) => {
+        btn.classList.toggle('active', ['scenario', 'dti', 'rates', 'amort'][i] === name);
+      });
+      document.getElementById('tab-' + name).classList.add('active');
+    }
+
+    const priceEl = document.getElementById('price');
+    priceEl.addEventListener('input', update);
+    priceEl.addEventListener('blur', () => {
+      const raw = parseRaw(priceEl.value);
+      if (raw > 0) priceEl.value = fmtComma(raw);
+      updateDownHint();
+    });
+    priceEl.addEventListener('focus', () => { priceEl.value = String(priceEl.value).replace(/,/g, ''); });
+
+    const downEl = document.getElementById('down');
+    downEl.addEventListener('input', update);
+    downEl.addEventListener('blur', () => {
+      if (downMode === 'dollar') {
+        const raw = parseRaw(downEl.value);
+        if (raw > 0) downEl.value = fmtComma(raw);
+      }
+      updateDownHint();
+    });
+    downEl.addEventListener('focus', () => {
+      if (downMode === 'dollar') downEl.value = String(downEl.value).replace(/,/g, '');
+    });
+
+    ['term', 'rate', 'tax', 'ins'].forEach(id => document.getElementById(id).addEventListener('input', update));
+    ['income', 'debts', 'maxdti'].forEach(id => document.getElementById(id).addEventListener('input', updateDTI));
+
+    update();
+  </script>
+</body>
+</html>
