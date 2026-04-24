@@ -487,7 +487,7 @@
 
     function updateRates(principal, currentRate, term, tax, ins) {
       const n = term * 12;
-      const rates = [-1.5, -1, -0.5, 0, 0.5, 1, 1.5].map(d => +(currentRate + d).toFixed(2)).filter(r => r > 0);
+      const rates = [-0.5, -0.375, -0.25, -0.125, 0, 0.125, 0.25, 0.375, 0.5].map(d => +(currentRate + d).toFixed(3)).filter(r => r > 0);
       const baseM = calcPI(principal, currentRate, term);
       document.getElementById('rate-tbody').innerHTML = rates.map(r => {
         const m = calcPI(principal, r, term);
@@ -498,7 +498,7 @@
         const diffStr = isBase ? '—' : (diff > 0 ? '+' : '') + fmt(diff);
         const diffColor = diff > 0 ? '#E24B4A' : diff < 0 ? '#1D9E75' : 'var(--text-secondary)';
         return `<tr${isBase ? ' class="highlight-row"' : ''}>
-          <td style="text-align:left">${r.toFixed(2)}%${isBase ? ' ★' : ''}</td>
+          <td style="text-align:left">${r.toFixed(3)}%${isBase ? ' ★' : ''}</td>
           <td>${fmt(m)}</td><td>${fmt(piti)}</td>
           <td>${fmt(Math.max(0, ti))}</td>
           <td style="color:${diffColor}">${diffStr}</td>
